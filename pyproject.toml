@@ -1,0 +1,7 @@
+[project]
+name = "reminder-bot"
+version = "0.1.0"
+description = "Your own reminder agent so that you don't miss anything while hanging out on your favorite platform!"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
