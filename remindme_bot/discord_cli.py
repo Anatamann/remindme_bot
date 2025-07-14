@@ -47,17 +47,26 @@ async def on_message(message):
             mesg = user_msg.split('>')
             # print("split message:", org_msg)
             org_msg = mesg[1].strip()
-            match_rm = re.match('remind', str(org_msg), re.IGNORECASE)
+            coms_msg = re.search(r'\bcoms\b',str(org_msg), re.IGNORECASE)
+            # print(f"coms_msg: {coms_msg}")
+            match_rm = re.search(r'\bremind(\s*:?me)?\b', str(org_msg), re.IGNORECASE)
             digit_match = re.findall(r'\d+', str(org_msg))
             # print(f"match_rm, digit_match: {match_rm}:{digit_match}")
             if match_rm and digit_match:
                 val = await remindme(org_msg, ctx)
                 await ctx.channel.send(f"{val}")
+            elif coms_msg:
+                reply = f'''
+                Time notation supported:
+                \n`s` or `sec` or `second` or `seconds`\n`m` or `min` or `minute` or `minutes`\n`h` or `hr` or `hrs` or `hour` or `hours`
+                \n`am` or `pm`  : Using 12hour format style.
+                \nEx: `@remindme_bot` remind me to call in 5min\n      `@remindme_bot` remind me to push code at 2pm'''
+                await ctx.channel.send(reply)
             else:
                 await ctx.channel.send('''
-                    f"Yooo whats up!\nuse the command like this:
-                    \nEx: @remindme_bot remind me to check the code in 30min.")
-                    \nThe smallest input unit is seconds but will advice to use minutes for better accuracy.
+                    f"Yooo whats up!\n check `coms` or use the command like this:
+                    \nEx: `@remindme_bot` remind me to check the code in 30min.")
+                    \nThe smallest input unit is `seconds` but will advice to use `minutes` for better accuracy.
                 ''')
         else:
             pass
@@ -78,7 +87,7 @@ async def remindme(msg, ctx):
         print("somehow user not showing up in discord's database!!")
     today = dt.datetime.now(ist)
     created_at = today
-
+    rm_at = rm_at.strftime("%Y-%m-%d %H:%M:%S.%f")
     if task and time:
         value = db.remind_in(str(task), float(time_target), str(ctx.author.id), str(created_at), str(rm_at))
         if not value:
@@ -253,19 +262,19 @@ def task_date_fn(today, id=1):
             return task_date
 
 
-@tasks.loop(minutes=1)
+@tasks.loop(seconds=30)
 async def rm_check_nlp():
     await bot.wait_until_ready()
     today = dt.datetime.now(ist)
     check_id = 1
     task_date_check = task_date_fn(today, check_id)
     if task_date_check:    
-        task_check_gaping_min = (today - task_date_check).total_seconds() / 60
+        task_check_gaping_min = (today - task_date_check).total_seconds()
     else:
         print("First date_time_check registered on the database!!")
         return
     
-    if task_check_gaping_min <= 1:
+    if task_check_gaping_min <= 0:
         print(f"check already done for {task_date_check}")
     else:
         task_date = today.strftime("%Y-%m-%d %H:%M:%S")
