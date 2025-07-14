@@ -76,7 +76,7 @@ async def remindme(msg, ctx):
     if task and time:
         value = db.remind_in(str(task), float(time_target), str(ctx.author.id), str(created_at), str(rm_at))
         if not value:
-            return (f"I got you, I will remind you about `{task}` at `{rm_at.strftime("%d-%m-%Y %H:%M:%S")}`")
+            return (f"I got you, I will remind you about `{task}`")
         else:
             return value
     
@@ -195,7 +195,7 @@ async def time_op(time):
                 time_target = int(time[0]) * 1.0
             else:
                 print("Can not find any time mentioned!!")        
-                return
+                pass
         rm_at = today + dt.timedelta(minutes=(float(time_target+0.1)))
         return round(time_target,3), rm_at
 
