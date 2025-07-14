@@ -47,12 +47,18 @@ async def on_message(message):
             mesg = user_msg.split('>')
             # print("split message:", org_msg)
             org_msg = mesg[1].strip()
-            match_rm = re.match('remind', org_msg, re.IGNORECASE)
-            if match_rm:
+            match_rm = re.match('remind', str(org_msg), re.IGNORECASE)
+            digit_match = re.findall(r'\d+', str(org_msg))
+            # print(f"match_rm, digit_match: {match_rm}:{digit_match}")
+            if match_rm and digit_match:
                 val = await remindme(org_msg, ctx)
                 await ctx.channel.send(f"{val}")
             else:
-                await ctx.channel.send(f"Yooo whats up! \n use the command like this : @remindme_bot remind me to check the code in 30min.")
+                await ctx.channel.send('''
+                    f"Yooo whats up!\nuse the command like this:
+                    \nEx: @remindme_bot remind me to check the code in 30min.")
+                    \nThe smallest input unit is seconds but will advice to use minutes for better accuracy.
+                ''')
         else:
             pass
 
@@ -137,25 +143,46 @@ async def nlp_task(msg):
     print("Time:", time_entities)
     
     if not time_entities:
-        timer = re.findall(r'(1[0-2]|0?[1-9])(:[0-5][0-9])?', sentence)
-        print(timer)
-        hour, minute = timer[0]
-        minute = minute.replace(":","")
-        minute = minute if minute else '00'
-        time_str = f"{hour}:{minute}"
         am_present = re.search(r'\b\d+(\s)?(am)$\b', sentence, re.IGNORECASE )
         pm_present = re.search(r'\b\d+(\s)?(pm)$\b', sentence, re.IGNORECASE )
-        print(time_str,"\n",am_present, "\n", pm_present)
-        if time_str:
-            if am_present:
-                print("am is present")
-                timer = str(time_str+'am')
-            elif pm_present:
-                print("pm is present")
-                timer = str(time_str+'pm')
+        
+        if am_present or pm_present:
+            timer = re.findall(r'(1[0-2]|0?[1-9])(:[0-5][0-9])?', sentence)
+            print(timer)
+            hour, minute = timer[0]
+            minute = minute.replace(":","")
+            minute = minute if minute else '00'
+            time_str = f"{hour}:{minute}"
+            print(time_str,"\n",am_present, "\n", pm_present)
+            if time_str:
+                if am_present:
+                    print("am is present")
+                    timer = str(time_str+'am')
+                elif pm_present:
+                    print("pm is present")
+                    timer = str(time_str+'pm')
+                else:
+                    pass
             else:
-                timer = timer[0][0]
-            print(f"inside the time_str: {timer}")
+                pass
+        else:
+            time_hr = re.search(r'\b(\d+)\s*(h|hrs|hr|hours|hour)$\b',str(sentence) ,re.IGNORECASE)
+            time_min = re.search(r'\b(\d+)\s*(m|min|minutes|minute)$\b',str(sentence) ,re.IGNORECASE)
+            time_sec = re.search(r'\b(\d+)\s*(s|sec|second|seconds)$\b',str(sentence),re.IGNORECASE)
+            time_digit = re.findall(r'\d+', str(sentence))
+            time_digit = time_digit[0]
+            if time_hr:
+                print(f"time_hr: {time_hr}")
+                timer = str( time_digit + 'hrs' )
+            elif time_min:
+                print(f"time_min: {time_min}")
+                timer = str(time_digit + 'min')
+            elif time_sec:
+                print(f"time_sec: {time_sec}")
+                timer = str(time_digit + 'sec')
+            else:
+                print(f"time_digit: {time_digit}")
+                timer = str(time_digit)
     else:
         timer = str(time_entities[0])
         print(timer)
@@ -176,27 +203,32 @@ async def time_op(time):
 
         timedt = time_dt - today
         time_target = float(timedt.seconds / 60)
-        rm_at = today + dt.timedelta(minutes=float(time_target+0.1))
+        rm_at = today + dt.timedelta(minutes=float(time_target))
         return round(time_target,3), rm_at
     else:
         dtime = re.search(r'\btomorrow\b', str(time),re.IGNORECASE)
         if dtime:
             time_target = float(24 * 60)
         else:
-            time_hr = re.search(r'\s(h|hrs|hr|hours|hour|)\s$',str(time) ,re.IGNORECASE)
+            time_digit = re.findall(r'\d+',str(time))
+            time_digit = time_digit[0]
+            time_hr = re.search(r'\b(\d+)\s*(h|hr|hrs|hour|hours)$\b',str(time) ,re.IGNORECASE)
             print(f"timer_hr: {time_hr}")
-            time_min = re.search(r'\s(m|mn|min|minutes|minute)\s$',str(time) ,re.IGNORECASE)
+            time_min = re.search(r'\b(\d+)\s*(m|min|minute|minutes)$\b',str(time) ,re.IGNORECASE)
             print(f"timer_min: {time_min}")
-            time_only = re.findall(r'\d+', time)
-            print(f"timer_only: {time_only}")
+            time_sec = re.search(r'\b(\d+)\s*(s|sec|second|seconds)$\b',str(time),re.IGNORECASE)
+            print(f"time in seconds: {time_sec}")
             if time_hr:
-                time_target = int(time[0]) * 60.0
-            elif time_min or time_only:
-                time_target = int(time[0]) * 1.0
-            else:
-                print("Can not find any time mentioned!!")        
-                pass
-        rm_at = today + dt.timedelta(minutes=(float(time_target+0.1)))
+                time_target = int(time_digit) * 60.0
+            elif time_min:
+                time_target = int(time_digit) * 1.0
+            elif time_sec:
+                time_target = int(time_digit) * (1.0/60)
+            else:        
+                time_target = int(time_digit) * 1.0
+                print(f"timer_only: {time_digit}")
+
+        rm_at = today + dt.timedelta(minutes=(float(time_target)))
         return round(time_target,3), rm_at
 
 
