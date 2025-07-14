@@ -193,7 +193,7 @@ async def time_op(time):
     time = str(time)
     print("time at time_op()",time)
     dtime = re.search(r'\s*(am|pm)\s*$',str(time) ,re.IGNORECASE)
-    today = dt.datetime.now()
+    today = dt.datetime.now(ist)
     if dtime:
         print(dtime.group(1))
         entrydate = str(time).replace(" ", "")
@@ -206,27 +206,23 @@ async def time_op(time):
         rm_at = today + dt.timedelta(minutes=float(time_target))
         return round(time_target,3), rm_at
     else:
-        dtime = re.search(r'\btomorrow\b', str(time),re.IGNORECASE)
-        if dtime:
-            time_target = float(24 * 60)
-        else:
-            time_digit = re.findall(r'\d+',str(time))
-            time_digit = time_digit[0]
-            time_hr = re.search(r'\b(\d+)\s*(h|hr|hrs|hour|hours)$\b',str(time) ,re.IGNORECASE)
-            print(f"timer_hr: {time_hr}")
-            time_min = re.search(r'\b(\d+)\s*(m|min|minute|minutes)$\b',str(time) ,re.IGNORECASE)
-            print(f"timer_min: {time_min}")
-            time_sec = re.search(r'\b(\d+)\s*(s|sec|second|seconds)$\b',str(time),re.IGNORECASE)
-            print(f"time in seconds: {time_sec}")
-            if time_hr:
-                time_target = int(time_digit) * 60.0
-            elif time_min:
-                time_target = int(time_digit) * 1.0
-            elif time_sec:
-                time_target = int(time_digit) * (1.0/60)
-            else:        
-                time_target = int(time_digit) * 1.0
-                print(f"timer_only: {time_digit}")
+        time_digit = re.findall(r'\d+',str(time))
+        time_digit = time_digit[0]
+        time_hr = re.search(r'\b(\d+)\s*(h|hr|hrs|hour|hours)$\b',str(time) ,re.IGNORECASE)
+        print(f"timer_hr: {time_hr}")
+        time_min = re.search(r'\b(\d+)\s*(m|min|minute|minutes)$\b',str(time) ,re.IGNORECASE)
+        print(f"timer_min: {time_min}")
+        time_sec = re.search(r'\b(\d+)\s*(s|sec|second|seconds)$\b',str(time),re.IGNORECASE)
+        print(f"time in seconds: {time_sec}")
+        if time_hr:
+            time_target = int(time_digit) * 60.0
+        elif time_min:
+            time_target = int(time_digit) * 1.0
+        elif time_sec:
+            time_target = int(time_digit) * (1.0/60)
+        else:        
+            time_target = int(time_digit) * 1.0
+            print(f"timer_only: {time_digit}")
 
         rm_at = today + dt.timedelta(minutes=(float(time_target)))
         return round(time_target,3), rm_at
