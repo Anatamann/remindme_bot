@@ -194,6 +194,26 @@ async def nlp_task(msg):
                 timer = str(time_digit)
     else:
         timer = str(time_entities[0])
+        print(f'timer:{timer}')
+        colon_present = re.search(r'\d+:\d+',timer)
+        if colon_present: 
+            time_str = colon_present[0]
+        else:
+            hour = re.search(r'\d+',timer)
+            hour_str, minute_str = hour[0], '00'
+            time_str = f"{hour_str}:{minute_str}"
+        
+        am_present = re.search(r'\b\d+\s*(am)$\b', timer, re.IGNORECASE )
+        pm_present = re.search(r'\b\d+\s*(pm)$\b', timer, re.IGNORECASE )
+        if time_str:
+            if am_present:
+                print("am is present")
+                timer = str(time_str+'am')
+            elif pm_present:
+                print("pm is present")
+                timer = str(time_str+'pm')
+            else:
+                pass                
         print(timer)
 
     return task, timer
@@ -208,7 +228,7 @@ async def time_op(time):
         entrydate = str(time).replace(" ", "")
         time_dt = dt.datetime.strptime(entrydate, "%I:%M%p")
         
-        time_dt = time_dt.replace(year=today.year, month=today.month, day=today.day)
+        time_dt = time_dt.replace(year=today.year, month=today.month, day=today.day, tzinfo=today.tzinfo)
 
         timedt = time_dt - today
         time_target = float(timedt.seconds / 60)
@@ -247,7 +267,7 @@ def task_date_fn(today, id=1):
         task_date = cursor.fetchone()
         today_f = today.strftime("%Y-%m-%d %H:%M:%S")
         if not task_date:
-            print(f'added first check_date {today_f}')
+            # print(f'added first check_date {today_f}')
             conn.execute ('''
                     INSERT INTO rm_check_table(task_date)
                     VALUES (?)
@@ -258,7 +278,7 @@ def task_date_fn(today, id=1):
             task_date = task_date[0]
             task_date = ist.localize(dt.datetime.strptime(task_date, "%Y-%m-%d %H:%M:%S"))
             db.rm_check_table_up(today_f, id)
-            print(f'todays {id} task_check date {task_date.strftime("%Y-%m-%d %H:%M:%S")}')
+            # print(f'todays {id} task_check date {task_date.strftime("%Y-%m-%d %H:%M:%S")}')
             return task_date
 
 
