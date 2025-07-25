@@ -25,7 +25,7 @@ A Discord bot that helps you set reminders using natural language processing. Si
 #### 1. Clone and Setup Environment
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Anatamann/remindme_bot.git
 cd remindme_bot
 ```
 
